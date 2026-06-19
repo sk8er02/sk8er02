@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, 'SF Pro Display', 'Helvetica Neue', sans-serif; background: #0a0a0a; display: flex; gap: 24px; padding: 24px; overflow-x: auto; }
+
+.screenshot {
+  width: 410px; height: 502px;
+  flex-shrink: 0;
+  border-radius: 16px;
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Gradient backgrounds */
+.ss1 { background: linear-gradient(180deg, #0D1B2A 0%, #1B2838 50%, #0D1B2A 100%); }
+.ss2 { background: linear-gradient(180deg, #1a0a0a 0%, #2a1010 50%, #1a0a0a 100%); }
+.ss3 { background: linear-gradient(180deg, #1a0a1a 0%, #2a102a 50%, #1a0a1a 100%); }
+.ss4 { background: linear-gradient(180deg, #0a1a0a 0%, #102a10 50%, #0a1a0a 100%); }
+
+.caption-area {
+  padding: 24px 20px 12px;
+  text-align: center;
+}
+.caption-area h2 {
+  color: white;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.2;
+  margin-bottom: 4px;
+}
+.caption-area p {
+  color: rgba(255,255,255,0.6);
+  font-size: 12px;
+  line-height: 1.3;
+}
+
+.watch-container {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0 20px 20px;
+}
+
+.watch {
+  width: 198px; height: 242px;
+  background: #1c1c1e;
+  border-radius: 40px;
+  padding: 12px;
+  position: relative;
+  border: 3px solid #555;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+}
+.watch-screen {
+  width: 100%; height: 100%;
+  border-radius: 30px;
+  overflow: hidden;
+  background: #000;
+  padding: 8px;
+}
+
+/* Watch UI Elements */
+.w-title { color: white; font-size: 16px; font-weight: 700; text-align: center; padding: 4px 0; }
+.w-risk { display: flex; flex-direction: column; align-items: center; padding: 8px; margin: 6px 0; border-radius: 12px; }
+.w-risk.green { background: rgba(52,199,89,0.15); border: 1px solid rgba(52,199,89,0.3); }
+.w-risk.red { background: rgba(255,69,58,0.15); border: 1px solid rgba(255,69,58,0.3); }
+.w-risk-dot { width: 20px; height: 20px; border-radius: 50%; margin-bottom: 4px; }
+.w-risk-dot.green { background: #34c759; box-shadow: 0 0 12px rgba(52,199,89,0.5); }
+.w-risk-dot.red { background: #ff453a; box-shadow: 0 0 12px rgba(255,69,58,0.5); animation: pulse 1.5s ease-in-out infinite; }
+@keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
+.w-risk-text { color: white; font-size: 12px; font-weight: 600; }
+
+.w-hr { display: flex; align-items: center; gap: 6px; padding: 8px 10px; margin: 6px 0; background: rgba(255,255,255,0.08); border-radius: 10px; }
+.w-hr.alert { background: rgba(255,69,58,0.12); border: 1px solid rgba(255,69,58,0.3); }
+.w-hr-icon { color: #ff3b30; font-size: 16px; }
+.w-hr-value { color: white; font-size: 24px; font-weight: 700; }
+.w-hr-value.danger { color: #ff453a; }
+.w-hr-unit { color: #8e8e93; font-size: 11px; }
+
+.w-btn { display: block; width: 100%; padding: 10px; background: #007aff; border-radius: 10px; color: white; font-size: 13px; font-weight: 600; text-align: center; margin-top: 6px; }
+.w-btn.red { background: #ff453a; }
+
+.w-slider-label { color: white; font-size: 13px; font-weight: 600; text-align: center; margin: 6px 0 2px; }
+.w-slider { width: 100%; height: 6px; background: #38383a; border-radius: 3px; position: relative; margin: 4px 0; }
+.w-slider-fill { height: 100%; border-radius: 3px; }
+.w-toggle { display: flex; justify-content: space-between; align-items: center; padding: 4px 0; }
+.w-toggle-label { color: white; font-size: 12px; }
+.w-toggle-switch { width: 36px; height: 20px; border-radius: 10px; position: relative; }
+.w-toggle-switch.on { background: #34c759; }
+.w-toggle-switch.off { background: #38383a; }
+.w-toggle-knob { width: 16px; height: 16px; background: white; border-radius: 50%; position: absolute; top: 2px; }
+.w-toggle-knob.on { right: 2px; }
+.w-toggle-knob.off { left: 2px; }
+
+.w-signal-row { display: flex; align-items: center; gap: 4px; padding: 3px 0; }
+.w-signal-icon { color: #ff9500; font-size: 10px; }
+.w-signal-text { color: white; font-size: 10px; }
+
+/* Complication preview */
+.complication-row {
+  display: flex; gap: 12px; justify-content: center; margin-top: 8px;
+}
+.complication {
+  width: 64px; height: 64px;
+  border-radius: 14px;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 2px;
+}
+.complication.green { background: rgba(52,199,89,0.15); border: 1px solid rgba(52,199,89,0.3); }
+.complication.yellow { background: rgba(255,204,0,0.15); border: 1px solid rgba(255,204,0,0.3); }
+.complication.red { background: rgba(255,69,58,0.15); border: 1px solid rgba(255,69,58,0.3); }
+.comp-dot { width: 10px; height: 10px; border-radius: 50%; }
+.comp-dot.green { background: #34c759; }
+.comp-dot.yellow { background: #ffcc00; }
+.comp-dot.red { background: #ff453a; }
+.comp-label { color: rgba(255,255,255,0.8); font-size: 8px; font-weight: 600; }
+.comp-value { color: white; font-size: 11px; font-weight: 700; }
+</style>
+</head>
+<body>
+
+<!-- Screenshot 1: Dashboard Normal -->
+<div class="screenshot ss1">
+  <div class="caption-area">
+    <h2>At-a-Glance Health Status</h2>
+    <p>Live vitals and risk scoring right on your wrist</p>
+  </div>
+  <div class="watch-container">
+    <div class="watch">
+      <div class="watch-screen">
+        <div class="w-title">PancreasGuard</div>
+        <div class="w-risk green">
+          <div class="w-risk-dot green"></div>
+          <div class="w-risk-text" style="color:#34c759">Normal</div>
+        </div>
+        <div class="w-hr">
+          <span class="w-hr-icon">&#x2764;</span>
+          <span class="w-hr-value">74</span>
+          <span class="w-hr-unit">bpm</span>
+        </div>
+        <div class="w-btn">+ Log Symptoms</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Screenshot 2: Alert State -->
+<div class="screenshot ss2">
+  <div class="caption-area">
+    <h2>Alerts When It Matters</h2>
+    <p>Multi-signal detection warns you days before a flare escalates</p>
+  </div>
+  <div class="watch-container">
+    <div class="watch">
+      <div class="watch-screen">
+        <div class="w-title" style="color:#ff453a">&#x26A0; Alert</div>
+        <div class="w-risk red">
+          <div class="w-risk-dot red"></div>
+          <div class="w-risk-text" style="color:#ff453a">Seek Care</div>
+        </div>
+        <div class="w-hr alert">
+          <span class="w-hr-icon">&#x2764;</span>
+          <span class="w-hr-value danger">122</span>
+          <span class="w-hr-unit">bpm</span>
+        </div>
+        <div class="w-signal-row"><span class="w-signal-icon">&#x26A0;</span><span class="w-signal-text">HR elevated, HRV &#x2193;63%</span></div>
+        <div class="w-signal-row"><span class="w-signal-icon">&#x26A0;</span><span class="w-signal-text">SpO2 91%, Steps &#x2193;69%</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Screenshot 3: Quick Log -->
+<div class="screenshot ss3">
+  <div class="caption-area">
+    <h2>Log Symptoms in Seconds</h2>
+    <p>Pain, nausea, vomiting — quick taps even during a flare</p>
+  </div>
+  <div class="watch-container">
+    <div class="watch">
+      <div class="watch-screen">
+        <div class="w-title">Quick Log</div>
+        <div class="w-slider-label">Pain: 7/10</div>
+        <div class="w-slider"><div class="w-slider-fill" style="width:70%;background:linear-gradient(90deg,#ffcc00,#ff453a);border-radius:3px;"></div></div>
+        <div class="w-toggle">
+          <span class="w-toggle-label">Nausea</span>
+          <div class="w-toggle-switch on"><div class="w-toggle-knob on"></div></div>
+        </div>
+        <div class="w-toggle">
+          <span class="w-toggle-label">Vomiting</span>
+          <div class="w-toggle-switch off"><div class="w-toggle-knob off"></div></div>
+        </div>
+        <div class="w-toggle">
+          <span class="w-toggle-label">Fever</span>
+          <div class="w-toggle-switch on"><div class="w-toggle-knob on"></div></div>
+        </div>
+        <div class="w-btn" style="margin-top:6px;">&#x2713; Save</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Screenshot 4: Watch Face Complications -->
+<div class="screenshot ss4">
+  <div class="caption-area">
+    <h2>Always Visible</h2>
+    <p>Watch face complications show your status at a glance</p>
+  </div>
+  <div class="watch-container">
+    <div class="watch">
+      <div class="watch-screen" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;">
+        <div style="color:#8e8e93;font-size:10px;font-weight:600;letter-spacing:1px;">WATCH FACE</div>
+        <div style="color:white;font-size:36px;font-weight:200;">10:09</div>
+        <div style="color:#8e8e93;font-size:11px;">Thursday, June 19</div>
+        <div class="complication-row">
+          <div class="complication green">
+            <div class="comp-dot green"></div>
+            <div class="comp-label">PG</div>
+            <div class="comp-value">OK</div>
+          </div>
+          <div class="complication yellow">
+            <div class="comp-dot yellow"></div>
+            <div class="comp-label">PG</div>
+            <div class="comp-value">Watch</div>
+          </div>
+          <div class="complication red">
+            <div class="comp-dot red"></div>
+            <div class="comp-label">PG</div>
+            <div class="comp-value">Alert</div>
+          </div>
+        </div>
+        <div style="color:rgba(255,255,255,0.4);font-size:9px;margin-top:4px;">Complication states</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

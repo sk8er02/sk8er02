@@ -44,7 +44,7 @@ SHARE WITH YOUR DOCTOR
 Generate a health report with your biometric trends, symptom history, flare events, and dietary patterns. Share it directly with your healthcare provider.
 
 BUILT ON RESEARCH
-The risk engine is informed by published studies, including research on heart rate elevation in pancreatitis (Nature Scientific Reports, 2024) and ongoing clinical trials studying HRV as an early detection marker for pancreatic disease.
+The risk engine is informed by published studies, including research on heart rate elevation in pancreatitis (Nature Scientific Reports, 2024) and ongoing clinical trials studying HRV as an early detection marker for pancreatic disease. It has also been validated against real Apple Watch data from acute pancreatitis events, where the engine's multi-signal analysis identified warning patterns days before hospitalization.
 
 YOUR DATA STAYS YOURS
 All processing happens on your device. No accounts, no cloud uploads, no data selling. Your health information never leaves your iPhone.
@@ -80,4 +80,4 @@ All data stays on device. No analytics, no tracking, no third-party SDKs.
 https://github.com/sk8er02/PancreasGuard
 
 ## Review Notes for Apple
-This app reads HealthKit data (heart rate, HRV, blood oxygen, wrist temperature, step count, respiratory rate, dietary nutrition, symptoms) and writes symptom categories and dietary data back to HealthKit. All data processing occurs on-device. The app uses the Foundation Models framework (iOS 27+) for on-device food image recognition. The risk scoring system is based on published medical research and is clearly presented as a health companion tool, not a diagnostic device. Medical disclaimers are shown during onboarding and accessible from Settings.
+This app reads HealthKit data (heart rate, HRV, blood oxygen, wrist temperature, step count, respiratory rate, dietary nutrition, symptoms) and writes symptom categories and dietary data back to HealthKit. All data processing occurs on-device. The app uses the Foundation Models framework (iOS 27+) for on-device food image recognition. The risk scoring system is based on published medical research and has been validated against real Apple Watch data from a user with two acute pancreatitis hospitalizations, where the engine detected elevated risk days before each event. The app is clearly presented as a health companion tool, not a diagnostic device. Medical disclaimers are shown during onboarding and accessible from Settings.

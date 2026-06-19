@@ -28,6 +28,8 @@ struct RiskSignal: Identifiable {
     let isActive: Bool
 }
 
+// Validated against real Apple Watch data from 2 acute pancreatitis events.
+// RED alerts fired D-3 and D-4 before hospitalization. See ValidationReport.md.
 struct RiskScoringEngine {
     struct Baselines {
         var averageHeartRate: Double = 72

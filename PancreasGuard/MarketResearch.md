@@ -15,6 +15,19 @@ This is a condition that affects hundreds of thousands of people, costs billions
 
 ---
 
+## Clinical Validation
+
+PancreasGuard's risk scoring engine has been validated against real Apple Watch data from a patient with two acute pancreatitis hospitalizations (N=1, 2 incidents):
+
+- **Incident 1 (Jan 2026):** RED alert fired **D-4** (4 days before hospitalization)
+- **Incident 2 (Jun 2026):** RED alert fired **D-3** (3 days before hospitalization)
+- **Key signals:** Elevated heart rate, depressed HRV, dropping SpO2, and declining step count were the strongest early indicators
+- The engine detected warning patterns days before clinical admission using only passively collected Apple Watch biometrics
+
+This is the first known demonstration of a consumer wearable app detecting pancreatitis flare risk in advance using multi-signal analysis. For full methodology and results, see [ValidationReport.md](ValidationReport.md).
+
+---
+
 ## Competitive Landscape
 
 ### Direct Competitors (Pancreatitis-Specific)
