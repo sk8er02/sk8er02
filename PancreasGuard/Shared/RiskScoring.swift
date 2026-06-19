@@ -43,7 +43,7 @@ struct RiskScoringEngine {
         self.baselines = baselines
     }
 
-    func assess(snapshot: HealthSnapshot, recentSymptoms: [SymptomEntry], recentFood: [FoodEntry]) -> RiskAssessment {
+    func assess(snapshot: HealthSnapshot, recentSymptoms: [SymptomEntry], recentFood: [FoodEntry], appleHealthAlcoholDrinks: Double = 0, appleHealthDietaryFatGrams: Double = 0) -> RiskAssessment {
         var signals: [RiskSignal] = []
         var totalWeightedScore: Double = 0
         var totalWeight: Double = 0
@@ -90,11 +90,17 @@ struct RiskScoringEngine {
         totalWeight += giSignal.weight
         if giSignal.isActive { totalWeightedScore += giSignal.weight }
 
-        // Recent alcohol consumption
-        let alcoholSignal = evaluateAlcohol(recentFood)
+        // Recent alcohol — combines in-app entries + Apple Health data from other apps
+        let alcoholSignal = evaluateAlcohol(recentFood, appleHealthDrinks: appleHealthAlcoholDrinks)
         signals.append(alcoholSignal)
         totalWeight += alcoholSignal.weight
         if alcoholSignal.isActive { totalWeightedScore += alcoholSignal.weight }
+
+        // High-fat diet — from Apple Health (MyFitnessPal, etc.) or in-app entries
+        let fatSignal = evaluateDietaryFat(recentFood, appleHealthFatGrams: appleHealthDietaryFatGrams)
+        signals.append(fatSignal)
+        totalWeight += fatSignal.weight
+        if fatSignal.isActive { totalWeightedScore += fatSignal.weight }
 
         let normalizedScore = totalWeight > 0 ? totalWeightedScore / totalWeight : 0
         let level = riskLevel(from: normalizedScore, signals: signals)
@@ -200,16 +206,33 @@ struct RiskScoringEngine {
         )
     }
 
-    private func evaluateAlcohol(_ food: [FoodEntry]) -> RiskSignal {
-        let recentAlcohol = food.first(where: {
+    private func evaluateAlcohol(_ food: [FoodEntry], appleHealthDrinks: Double) -> RiskSignal {
+        let inAppAlcohol = food.contains(where: {
             $0.timestamp > Date().addingTimeInterval(-24 * 3600) && $0.containsAlcohol
         })
-        let isActive = recentAlcohol != nil
+        let hasAlcohol = inAppAlcohol || appleHealthDrinks > 0
+        let drinkCount = appleHealthDrinks > 0 ? Int(appleHealthDrinks) : (food.first(where: { $0.containsAlcohol })?.alcoholQuantity ?? 0)
         return RiskSignal(
             name: "Alcohol",
-            description: isActive ? "Alcohol consumed in last 24 hours" : "No recent alcohol",
+            description: hasAlcohol ? "\(drinkCount) drink(s) in last 24h (via Apple Health or manual entry)" : "No recent alcohol",
             weight: 0.05,
-            isActive: isActive
+            isActive: hasAlcohol
+        )
+    }
+
+    private func evaluateDietaryFat(_ food: [FoodEntry], appleHealthFatGrams: Double) -> RiskSignal {
+        let inAppHighFat = food.contains(where: {
+            $0.timestamp > Date().addingTimeInterval(-24 * 3600) && $0.isHighFat
+        })
+        // >65g daily fat is considered high for pancreatitis patients
+        let hasHighFat = inAppHighFat || appleHealthFatGrams > 65
+        return RiskSignal(
+            name: "Dietary Fat",
+            description: hasHighFat
+                ? (appleHealthFatGrams > 0 ? "High fat intake: \(Int(appleHealthFatGrams))g today (via Apple Health)" : "High-fat food logged")
+                : "Fat intake normal",
+            weight: 0.04,
+            isActive: hasHighFat
         )
     }
 

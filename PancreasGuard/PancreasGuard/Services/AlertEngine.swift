@@ -19,8 +19,8 @@ final class AlertEngine {
         engine.baselines = baselines
     }
 
-    func evaluate(snapshot: HealthSnapshot, symptoms: [SymptomEntry], food: [FoodEntry]) -> RiskAssessment {
-        let assessment = scoringEngine.assess(snapshot: snapshot, recentSymptoms: symptoms, recentFood: food)
+    func evaluate(snapshot: HealthSnapshot, symptoms: [SymptomEntry], food: [FoodEntry], appleHealthAlcoholDrinks: Double = 0, appleHealthDietaryFatGrams: Double = 0) -> RiskAssessment {
+        let assessment = scoringEngine.assess(snapshot: snapshot, recentSymptoms: symptoms, recentFood: food, appleHealthAlcoholDrinks: appleHealthAlcoholDrinks, appleHealthDietaryFatGrams: appleHealthDietaryFatGrams)
         currentAssessment = assessment
 
         if shouldNotify(for: assessment) {

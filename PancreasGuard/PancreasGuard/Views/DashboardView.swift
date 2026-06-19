@@ -250,10 +250,18 @@ struct DashboardView: View {
 
     private func refresh() async {
         isRefreshing = true
-        let snapshot = await healthKit.fetchLatestSnapshot()
+        async let snapshot = healthKit.fetchLatestSnapshot()
+        async let _ = healthKit.fetchDietaryDataFromAppleHealth()
+        let snap = await snapshot
         let recentSymptoms = symptoms.filter { $0.timestamp > Date().addingTimeInterval(-6 * 3600) }
         let recentFood = foodEntries.filter { $0.timestamp > Date().addingTimeInterval(-24 * 3600) }
-        _ = alertEngine.evaluate(snapshot: snapshot, symptoms: recentSymptoms, food: recentFood)
+        _ = alertEngine.evaluate(
+            snapshot: snap,
+            symptoms: recentSymptoms,
+            food: recentFood,
+            appleHealthAlcoholDrinks: healthKit.recentAlcoholDrinks,
+            appleHealthDietaryFatGrams: healthKit.recentDietaryFatGrams
+        )
         isRefreshing = false
     }
 }

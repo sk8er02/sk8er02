@@ -10,8 +10,15 @@ struct HealthKitQueries {
     static let stepCountType = HKQuantityType.quantityType(forIdentifier: .stepCount)!
     static let respiratoryRateType = HKQuantityType.quantityType(forIdentifier: .respiratoryRate)!
 
+    // Dietary types — read from other apps via Apple Health
+    static let alcoholicBeveragesType = HKQuantityType.quantityType(forIdentifier: .numberOfAlcoholicBeverages)!
+    static let bloodAlcoholType = HKQuantityType.quantityType(forIdentifier: .bloodAlcoholContent)!
+    static let dietaryFatType = HKQuantityType.quantityType(forIdentifier: .dietaryFatTotal)!
+    static let dietaryEnergyType = HKQuantityType.quantityType(forIdentifier: .dietaryEnergyConsumed)!
+
     static var allReadTypes: Set<HKSampleType> {
-        [heartRateType, hrvType, restingHRType, spo2Type, wristTempType, stepCountType, respiratoryRateType]
+        [heartRateType, hrvType, restingHRType, spo2Type, wristTempType, stepCountType, respiratoryRateType,
+         alcoholicBeveragesType, bloodAlcoholType, dietaryFatType, dietaryEnergyType]
     }
 
     static func latestSample(
@@ -108,6 +115,14 @@ struct HealthKitQueries {
             return .count()
         case respiratoryRateType:
             return HKUnit.count().unitDivided(by: .minute())
+        case alcoholicBeveragesType:
+            return .count()
+        case bloodAlcoholType:
+            return .percent()
+        case dietaryFatType:
+            return .gram()
+        case dietaryEnergyType:
+            return .kilocalorie()
         default:
             return .count()
         }

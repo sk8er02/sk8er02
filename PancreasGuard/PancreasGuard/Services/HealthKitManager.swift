@@ -9,6 +9,8 @@ final class HealthKitManager {
     var isAuthorized = false
     var latestSnapshot: HealthSnapshot?
     var baselines = RiskScoringEngine.Baselines()
+    var recentAlcoholDrinks: Double = 0
+    var recentDietaryFatGrams: Double = 0
 
     var isHealthKitAvailable: Bool {
         HKHealthStore.isHealthDataAvailable()
@@ -77,6 +79,18 @@ final class HealthKitManager {
         await fetchSamples(.heartRateVariabilitySDNN, days: days)
     }
 
+    // Reads alcohol & dietary fat from Apple Health (written by any app — MyFitnessPal, DrinkCount, etc.)
+    func fetchDietaryDataFromAppleHealth() async {
+        let last24h = Date().addingTimeInterval(-24 * 3600)
+
+        async let alcohol = fetchCumulative(.numberOfAlcoholicBeverages, since: last24h)
+        async let fat = fetchCumulative(.dietaryFatTotal, since: last24h)
+
+        let (drinks, fatGrams) = await (alcohol, fat)
+        recentAlcoholDrinks = drinks ?? 0
+        recentDietaryFatGrams = fatGrams ?? 0
+    }
+
     // MARK: - Private
 
     private func fetchLatest(_ identifier: HKQuantityTypeIdentifier) async -> Double? {
@@ -113,6 +127,15 @@ final class HealthKitManager {
         return await withCheckedContinuation { continuation in
             HealthKitQueries.cumulativeSum(for: type, since: startDate, store: store) { value in
                 continuation.resume(returning: value.map { $0 / Double(days) })
+            }
+        }
+    }
+
+    private func fetchCumulative(_ identifier: HKQuantityTypeIdentifier, since startDate: Date) async -> Double? {
+        let type = HKQuantityType.quantityType(forIdentifier: identifier)!
+        return await withCheckedContinuation { continuation in
+            HealthKitQueries.cumulativeSum(for: type, since: startDate, store: store) { value in
+                continuation.resume(returning: value)
             }
         }
     }
