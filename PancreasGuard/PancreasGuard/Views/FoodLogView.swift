@@ -14,10 +14,33 @@ struct FoodLogView: View {
     @State private var isHighFat = false
     @State private var isKnownTrigger = false
     @State private var showingSaveConfirmation = false
+    @State private var showingFoodCamera = false
 
     var body: some View {
         NavigationStack {
             Form {
+                Section {
+                    Button {
+                        showingFoodCamera = true
+                    } label: {
+                        HStack {
+                            Image(systemName: "camera.viewfinder")
+                                .font(.title2)
+                                .foregroundStyle(.blue)
+                            VStack(alignment: .leading) {
+                                Text("Scan with Camera")
+                                    .font(.subheadline.bold())
+                                Text("AI identifies food, fat content & alcohol")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                            Spacer()
+                            Image(systemName: "chevron.right")
+                                .foregroundStyle(.tertiary)
+                        }
+                    }
+                }
+
                 Section("Meal Details") {
                     Picker("Meal Type", selection: $mealType) {
                         ForEach(MealType.allCases, id: \.self) { type in
@@ -89,6 +112,17 @@ struct FoodLogView: View {
                 }
             }
             .navigationTitle("Food & Drink")
+            .sheet(isPresented: $showingFoodCamera) {
+                FoodCameraView { result in
+                    foodDescription = result.description
+                    mealType = result.mealType
+                    containsAlcohol = result.isAlcoholic
+                    alcoholType = result.alcoholType ?? ""
+                    alcoholQuantity = result.estimatedDrinkCount ?? 1
+                    isHighFat = result.isHighFat
+                    isKnownTrigger = result.isHighFat || result.isAlcoholic
+                }
+            }
             .overlay {
                 if showingSaveConfirmation {
                     VStack(spacing: 12) {

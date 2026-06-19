@@ -2,6 +2,8 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>NSCameraUsageDescription</key>
+	<string>PancreasGuard uses the camera to photograph meals and drinks. On-device AI identifies the food, estimates fat content, and detects alcohol to auto-fill your food log.</string>
 	<key>NSHealthShareUsageDescription</key>
 	<string>PancreasGuard reads your heart rate, HRV, blood oxygen, temperature, and activity data to establish health baselines and detect potential pancreatitis flare patterns. Your data never leaves your device.</string>
 	<key>NSHealthUpdateUsageDescription</key>
