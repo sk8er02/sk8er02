@@ -20,7 +20,7 @@ final class HealthKitManager {
         guard isHealthKitAvailable else { return }
 
         try await store.requestAuthorization(
-            toShare: [],
+            toShare: HealthKitQueries.allWriteTypes,
             read: HealthKitQueries.allReadTypes
         )
         isAuthorized = true
@@ -79,7 +79,52 @@ final class HealthKitManager {
         await fetchSamples(.heartRateVariabilitySDNN, days: days)
     }
 
-    // Reads alcohol & dietary fat from Apple Health (written by any app — MyFitnessPal, DrinkCount, etc.)
+    // MARK: - Write to Apple Health
+
+    func saveAlcoholToAppleHealth(drinks: Int) async throws {
+        let type = HealthKitQueries.alcoholicBeveragesType
+        let quantity = HKQuantity(unit: .count(), doubleValue: Double(drinks))
+        let sample = HKQuantitySample(type: type, quantity: quantity, start: Date(), end: Date())
+        try await store.save(sample)
+    }
+
+    func saveDietaryFatToAppleHealth(grams: Double) async throws {
+        let type = HealthKitQueries.dietaryFatType
+        let quantity = HKQuantity(unit: .gram(), doubleValue: grams)
+        let sample = HKQuantitySample(type: type, quantity: quantity, start: Date(), end: Date())
+        try await store.save(sample)
+    }
+
+    func saveSymptomsToAppleHealth(entry: SymptomEntry) async throws {
+        if entry.hasNausea {
+            let type = HKCategoryType.categoryType(forIdentifier: .nausea)!
+            let sample = HKCategorySample(type: type, value: HKCategoryValueSeverity.moderate.rawValue, start: entry.timestamp, end: entry.timestamp)
+            try await store.save(sample)
+        }
+        if entry.hasVomiting {
+            let type = HKCategoryType.categoryType(forIdentifier: .vomiting)!
+            let sample = HKCategorySample(type: type, value: HKCategoryValueSeverity.moderate.rawValue, start: entry.timestamp, end: entry.timestamp)
+            try await store.save(sample)
+        }
+        if entry.hasFever {
+            let type = HKCategoryType.categoryType(forIdentifier: .fever)!
+            let sample = HKCategorySample(type: type, value: HKCategoryValueSeverity.moderate.rawValue, start: entry.timestamp, end: entry.timestamp)
+            try await store.save(sample)
+        }
+        if entry.hasBloating {
+            let type = HKCategoryType.categoryType(forIdentifier: .bloating)!
+            let sample = HKCategorySample(type: type, value: HKCategoryValueSeverity.moderate.rawValue, start: entry.timestamp, end: entry.timestamp)
+            try await store.save(sample)
+        }
+        if entry.painLevel > 0 {
+            let type = HKCategoryType.categoryType(forIdentifier: .abdominalCramps)!
+            let severity: HKCategoryValueSeverity = entry.painLevel >= 7 ? .severe : entry.painLevel >= 4 ? .moderate : .mild
+            let sample = HKCategorySample(type: type, value: severity.rawValue, start: entry.timestamp, end: entry.timestamp)
+            try await store.save(sample)
+        }
+    }
+
+    // MARK: - Read dietary data from Apple Health (written by any app)
     func fetchDietaryDataFromAppleHealth() async {
         let last24h = Date().addingTimeInterval(-24 * 3600)
 

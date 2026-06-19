@@ -4,6 +4,7 @@ import SwiftData
 struct SymptomLogView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
+    @Environment(HealthKitManager.self) private var healthKit
     @Query(sort: \SymptomEntry.timestamp, order: .reverse) private var allEntries: [SymptomEntry]
 
     @State private var painLevel: Double = 0
@@ -138,6 +139,10 @@ struct SymptomLogView: View {
             notes: notes
         )
         modelContext.insert(entry)
+
+        Task {
+            try? await healthKit.saveSymptomsToAppleHealth(entry: entry)
+        }
 
         withAnimation {
             showingSaveConfirmation = true

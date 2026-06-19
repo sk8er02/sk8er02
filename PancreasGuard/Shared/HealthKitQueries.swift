@@ -16,9 +16,22 @@ struct HealthKitQueries {
     static let dietaryFatType = HKQuantityType.quantityType(forIdentifier: .dietaryFatTotal)!
     static let dietaryEnergyType = HKQuantityType.quantityType(forIdentifier: .dietaryEnergyConsumed)!
 
+    // Symptom category types — write user-reported symptoms back to Apple Health
+    static let nauseaType = HKCategoryType.categoryType(forIdentifier: .nausea)!
+    static let vomitingType = HKCategoryType.categoryType(forIdentifier: .vomiting)!
+    static let feverType = HKCategoryType.categoryType(forIdentifier: .fever)!
+    static let bloatingType = HKCategoryType.categoryType(forIdentifier: .bloating)!
+    static let abdominalCrampsType = HKCategoryType.categoryType(forIdentifier: .abdominalCramps)!
+
     static var allReadTypes: Set<HKSampleType> {
         [heartRateType, hrvType, restingHRType, spo2Type, wristTempType, stepCountType, respiratoryRateType,
-         alcoholicBeveragesType, bloodAlcoholType, dietaryFatType, dietaryEnergyType]
+         alcoholicBeveragesType, bloodAlcoholType, dietaryFatType, dietaryEnergyType,
+         nauseaType, vomitingType, feverType, bloatingType, abdominalCrampsType]
+    }
+
+    static var allWriteTypes: Set<HKSampleType> {
+        [alcoholicBeveragesType, dietaryFatType, dietaryEnergyType,
+         nauseaType, vomitingType, feverType, bloatingType, abdominalCrampsType]
     }
 
     static func latestSample(

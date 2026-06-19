@@ -3,6 +3,7 @@ import SwiftData
 
 struct FoodLogView: View {
     @Environment(\.modelContext) private var modelContext
+    @Environment(HealthKitManager.self) private var healthKit
     @Query(sort: \FoodEntry.timestamp, order: .reverse) private var allEntries: [FoodEntry]
 
     @State private var mealType: MealType = .snack
@@ -117,6 +118,12 @@ struct FoodLogView: View {
             isKnownTrigger: isKnownTrigger
         )
         modelContext.insert(entry)
+
+        Task {
+            if containsAlcohol {
+                try? await healthKit.saveAlcoholToAppleHealth(drinks: alcoholQuantity)
+            }
+        }
 
         withAnimation { showingSaveConfirmation = true }
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
