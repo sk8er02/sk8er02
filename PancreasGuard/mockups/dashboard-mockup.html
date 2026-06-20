@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, 'SF Pro Display', 'Helvetica Neue', sans-serif; background: #000; display: flex; justify-content: center; padding: 20px; }
+.phone { width: 393px; height: 852px; background: #1c1c1e; border-radius: 47px; padding: 20px; overflow: hidden; position: relative; border: 3px solid #333; }
+.status-bar { display: flex; justify-content: space-between; padding: 15px 10px 5px; color: white; font-size: 14px; font-weight: 600; }
+.notch { width: 126px; height: 34px; background: #000; border-radius: 0 0 20px 20px; position: absolute; top: 0; left: 50%; transform: translateX(-50%); }
+.title { color: white; font-size: 34px; font-weight: 700; padding: 10px 5px 15px; }
+.content { padding: 0 5px; overflow-y: auto; height: 680px; }
+
+.risk-card { background: rgba(52, 199, 89, 0.15); border: 1px solid rgba(52, 199, 89, 0.3); border-radius: 16px; padding: 16px; margin-bottom: 16px; }
+.risk-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.risk-dot { width: 16px; height: 16px; border-radius: 50%; background: #34c759; }
+.risk-title { color: white; font-size: 17px; font-weight: 600; }
+.risk-score { color: #8e8e93; font-size: 13px; margin-left: auto; }
+.risk-desc { color: #8e8e93; font-size: 15px; line-height: 1.4; }
+
+.vitals-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+.vital-card { background: rgba(255,255,255,0.08); backdrop-filter: blur(20px); border-radius: 12px; padding: 14px; }
+.vital-header { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; }
+.vital-icon { font-size: 14px; }
+.vital-label { color: #8e8e93; font-size: 13px; }
+.vital-value { color: white; font-size: 28px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.vital-unit { color: #8e8e93; font-size: 12px; margin-left: 2px; }
+
+.section-card { background: rgba(255,255,255,0.08); border-radius: 12px; padding: 16px; margin-bottom: 16px; }
+.section-title { color: white; font-size: 17px; font-weight: 600; margin-bottom: 10px; }
+.symptom-row { display: flex; align-items: center; gap: 8px; padding: 6px 0; }
+.pain-dot { width: 10px; height: 10px; border-radius: 50%; }
+.symptom-text { color: white; font-size: 15px; }
+.symptom-time { color: #636366; font-size: 13px; margin-left: auto; }
+.symptom-chip { background: rgba(255, 149, 0, 0.2); color: #ff9500; font-size: 11px; padding: 2px 8px; border-radius: 10px; }
+
+.actions { display: flex; gap: 12px; }
+.action-btn { flex: 1; background: rgba(0, 122, 255, 0.15); border: 1px solid rgba(0, 122, 255, 0.3); border-radius: 10px; padding: 10px; text-align: center; color: #007aff; font-size: 14px; font-weight: 500; }
+
+.tab-bar { position: absolute; bottom: 0; left: 0; right: 0; height: 83px; background: rgba(28,28,30,0.95); backdrop-filter: blur(20px); border-top: 0.5px solid #38383a; display: flex; justify-content: space-around; padding: 8px 0 25px; }
+.tab { text-align: center; color: #8e8e93; font-size: 10px; }
+.tab.active { color: #007aff; }
+.tab-icon { font-size: 22px; margin-bottom: 2px; }
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="notch"></div>
+  <div class="status-bar">
+    <span>9:41</span>
+    <span>&#x1F4F6; &#x1F50B;</span>
+  </div>
+  <div class="title">PancreasGuard</div>
+  <div class="content">
+    <div class="risk-card">
+      <div class="risk-header">
+        <div class="risk-dot"></div>
+        <span class="risk-title">Normal</span>
+        <span class="risk-score">Score: 12%</span>
+      </div>
+      <div class="risk-desc">All indicators normal. Continue monitoring.</div>
+    </div>
+
+    <div class="vitals-grid">
+      <div class="vital-card">
+        <div class="vital-header">
+          <span class="vital-icon" style="color:#ff3b30">&#x2764;</span>
+          <span class="vital-label">Heart Rate</span>
+        </div>
+        <span class="vital-value">74<span class="vital-unit">bpm</span></span>
+      </div>
+      <div class="vital-card">
+        <div class="vital-header">
+          <span class="vital-icon" style="color:#af52de">&#x23E3;</span>
+          <span class="vital-label">HRV</span>
+        </div>
+        <span class="vital-value">42<span class="vital-unit">ms</span></span>
+      </div>
+      <div class="vital-card">
+        <div class="vital-header">
+          <span class="vital-icon" style="color:#007aff">&#x1FAC1;</span>
+          <span class="vital-label">Blood Oxygen</span>
+        </div>
+        <span class="vital-value">97<span class="vital-unit">%</span></span>
+      </div>
+      <div class="vital-card">
+        <div class="vital-header">
+          <span class="vital-icon" style="color:#ff9500">&#x1F321;</span>
+          <span class="vital-label">Temperature</span>
+        </div>
+        <span class="vital-value">+0.2<span class="vital-unit">°C</span></span>
+      </div>
+      <div class="vital-card">
+        <div class="vital-header">
+          <span class="vital-icon" style="color:#34c759">&#x1F6B6;</span>
+          <span class="vital-label">Steps</span>
+        </div>
+        <span class="vital-value">4,821<span class="vital-unit">today</span></span>
+      </div>
+      <div class="vital-card">
+        <div class="vital-header">
+          <span class="vital-icon" style="color:#5ac8fa">&#x1F4A8;</span>
+          <span class="vital-label">Resp. Rate</span>
+        </div>
+        <span class="vital-value">16<span class="vital-unit">br/min</span></span>
+      </div>
+    </div>
+
+    <div class="section-card">
+      <div class="section-title">Recent Symptoms</div>
+      <div class="symptom-row">
+        <div class="pain-dot" style="background:#ff9500"></div>
+        <span class="symptom-text">Pain: 4/10 — Upper Abdomen</span>
+        <span class="symptom-time">2h ago</span>
+      </div>
+      <div class="symptom-row">
+        <div class="pain-dot" style="background:#ffcc00"></div>
+        <span class="symptom-text">Pain: 2/10 — Radiating to Back</span>
+        <span class="symptom-chip">Nausea</span>
+        <span class="symptom-time">6h ago</span>
+      </div>
+    </div>
+
+    <div class="section-card">
+      <div class="section-title">Quick Actions</div>
+      <div class="actions">
+        <div class="action-btn">+ Log Symptoms</div>
+        <div class="action-btn">&#x1F4C4; Doctor Report</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tab-bar">
+    <div class="tab active"><div class="tab-icon">&#x1F4CB;</div>Dashboard</div>
+    <div class="tab"><div class="tab-icon">&#x2795;</div>Log</div>
+    <div class="tab"><div class="tab-icon">&#x1F374;</div>Food</div>
+    <div class="tab"><div class="tab-icon">&#x1F4C8;</div>Trends</div>
+    <div class="tab"><div class="tab-icon">&#x2699;</div>Settings</div>
+  </div>
+</div>
+</body>
+</html>
