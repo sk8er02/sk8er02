@@ -16,6 +16,10 @@ struct DashboardView: View {
             ScrollView {
                 VStack(spacing: 16) {
                     riskStatusCard
+                    if let assessment = riskAssessment, !assessment.temporalSignals.isEmpty {
+                        trendAlertsCard(assessment.temporalSignals)
+                    }
+                    aiInsightCard
                     vitalSignsGrid
                     recentSymptomsCard
                     quickActionsCard
@@ -84,6 +88,101 @@ struct DashboardView: View {
         case .yellow: return .yellow
         case .orange: return .orange
         case .red: return .red
+        }
+    }
+
+    // MARK: - Trend Alerts
+
+    private func trendAlertsCard(_ signals: [TemporalSignal]) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Image(systemName: "chart.line.uptrend.xyaxis")
+                    .foregroundStyle(.orange)
+                Text("Multi-Day Trends Detected")
+                    .font(.headline)
+            }
+
+            ForEach(signals.indices, id: \.self) { i in
+                let signal = signals[i]
+                HStack(alignment: .top) {
+                    Circle()
+                        .fill(signal.severity >= 0.6 ? Color.red : .orange)
+                        .frame(width: 8, height: 8)
+                        .padding(.top, 5)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(signal.name)
+                            .font(.subheadline.bold())
+                        Text(signal.description)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                    Text("\(signal.daysDetected)d")
+                        .font(.caption.bold().monospacedDigit())
+                        .foregroundStyle(.secondary)
+                }
+            }
+        }
+        .padding()
+        .background(Color.orange.opacity(0.1))
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(Color.orange.opacity(0.3), lineWidth: 1)
+        )
+    }
+
+    // MARK: - AI Insight Card
+
+    @ViewBuilder
+    private var aiInsightCard: some View {
+        if let insight = alertEngine.aiAnalyst.latestInsight {
+            VStack(alignment: .leading, spacing: 8) {
+                HStack {
+                    Image(systemName: "brain")
+                        .foregroundStyle(.purple)
+                    Text("AI Analysis")
+                        .font(.headline)
+                    Spacer()
+                    Text(insight.confidence)
+                        .font(.caption2)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 2)
+                        .background(.purple.opacity(0.15))
+                        .clipShape(Capsule())
+                }
+
+                Text(insight.summary)
+                    .font(.subheadline)
+
+                if !insight.reasoning.isEmpty {
+                    DisclosureGroup("Clinical reasoning") {
+                        Text(insight.reasoning)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                    .font(.caption)
+                }
+            }
+            .padding()
+            .background(.purple.opacity(0.05))
+            .clipShape(RoundedRectangle(cornerRadius: 12))
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(Color.purple.opacity(0.2), lineWidth: 1)
+            )
+        } else if alertEngine.aiAnalyst.isAnalyzing {
+            HStack {
+                ProgressView()
+                    .scaleEffect(0.8)
+                Text("Analyzing patterns...")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            .frame(maxWidth: .infinity)
+            .padding()
+            .background(.ultraThinMaterial)
+            .clipShape(RoundedRectangle(cornerRadius: 12))
         }
     }
 
@@ -252,15 +351,31 @@ struct DashboardView: View {
         isRefreshing = true
         async let snapshot = healthKit.fetchLatestSnapshot()
         async let _ = healthKit.fetchDietaryDataFromAppleHealth()
+        async let recentHistory = healthKit.fetchRecentSummaries(days: 7)
+
         let snap = await snapshot
+        let history = await recentHistory
         let recentSymptoms = symptoms.filter { $0.timestamp > Date().addingTimeInterval(-6 * 3600) }
         let recentFood = foodEntries.filter { $0.timestamp > Date().addingTimeInterval(-24 * 3600) }
+
+        // Compute personalized thresholds if enough history
+        if history.count >= 7 {
+            let adaptiveEngine = AdaptiveBaselineEngine(history: history)
+            let thresholds = adaptiveEngine.computeThresholds()
+            alertEngine.updatePersonalizedThresholds(thresholds)
+
+            let dayOfWeek = Calendar.current.component(.weekday, from: Date())
+            let dayBaselines = adaptiveEngine.dayAdjustedBaseline(for: dayOfWeek)
+            alertEngine.updateBaselines(dayBaselines)
+        }
+
         _ = alertEngine.evaluate(
             snapshot: snap,
             symptoms: recentSymptoms,
             food: recentFood,
             appleHealthAlcoholDrinks: healthKit.recentAlcoholDrinks,
-            appleHealthDietaryFatGrams: healthKit.recentDietaryFatGrams
+            appleHealthDietaryFatGrams: healthKit.recentDietaryFatGrams,
+            recentHistory: history
         )
         isRefreshing = false
     }

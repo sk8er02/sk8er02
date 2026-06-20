@@ -4,9 +4,33 @@ struct RiskAssessment {
     let level: RiskLevel
     let score: Double // 0.0 - 1.0
     let activeSignals: [RiskSignal]
+    let temporalSignals: [TemporalSignal]
     let timestamp: Date
+    let usedPersonalizedThresholds: Bool
+
+    init(level: RiskLevel, score: Double, activeSignals: [RiskSignal], timestamp: Date, temporalSignals: [TemporalSignal] = [], usedPersonalizedThresholds: Bool = false) {
+        self.level = level
+        self.score = score
+        self.activeSignals = activeSignals
+        self.temporalSignals = temporalSignals
+        self.timestamp = timestamp
+        self.usedPersonalizedThresholds = usedPersonalizedThresholds
+    }
 
     var recommendation: String {
+        if !temporalSignals.isEmpty {
+            let trendNames = temporalSignals.map(\.name).joined(separator: ", ")
+            switch level {
+            case .green:
+                return "All indicators normal. Continue monitoring."
+            case .yellow:
+                return "Some indicators are elevated (\(trendNames)). Monitor closely and log any symptoms."
+            case .orange:
+                return "Multi-day warning pattern detected (\(trendNames)). Consider contacting your healthcare provider."
+            case .red:
+                return "Significant multi-day warning pattern (\(trendNames)). Please seek medical attention promptly."
+            }
+        }
         switch level {
         case .green:
             return "All indicators normal. Continue monitoring."
@@ -41,12 +65,18 @@ struct RiskScoringEngine {
     }
 
     var baselines: Baselines
+    var personalizedThresholds: PersonalizedThresholds?
 
-    init(baselines: Baselines = Baselines()) {
-        self.baselines = baselines
+    private var thresholds: PersonalizedThresholds {
+        personalizedThresholds ?? .defaults
     }
 
-    func assess(snapshot: HealthSnapshot, recentSymptoms: [SymptomEntry], recentFood: [FoodEntry], appleHealthAlcoholDrinks: Double = 0, appleHealthDietaryFatGrams: Double = 0) -> RiskAssessment {
+    init(baselines: Baselines = Baselines(), personalizedThresholds: PersonalizedThresholds? = nil) {
+        self.baselines = baselines
+        self.personalizedThresholds = personalizedThresholds
+    }
+
+    func assess(snapshot: HealthSnapshot, recentSymptoms: [SymptomEntry], recentFood: [FoodEntry], appleHealthAlcoholDrinks: Double = 0, appleHealthDietaryFatGrams: Double = 0, recentHistory: [DailyBiometricSummary] = []) -> RiskAssessment {
         var signals: [RiskSignal] = []
         var totalWeightedScore: Double = 0
         var totalWeight: Double = 0
@@ -112,13 +142,26 @@ struct RiskScoringEngine {
         if fatSignal.isActive { totalWeightedScore += fatSignal.weight }
 
         let normalizedScore = totalWeight > 0 ? totalWeightedScore / totalWeight : 0
-        let level = riskLevel(from: normalizedScore, signals: signals)
+
+        // Temporal pattern analysis — multi-day trends boost risk assessment
+        let temporalEngine = TemporalPatternEngine(recentSummaries: recentHistory, baselines: baselines)
+        let temporalSignals = temporalEngine.detectPatterns()
+
+        var temporalBoost: Double = 0
+        for signal in temporalSignals {
+            temporalBoost += signal.severity * 0.15
+        }
+
+        let adjustedScore = min(1.0, normalizedScore + temporalBoost)
+        let level = riskLevel(from: adjustedScore, signals: signals, temporalSignals: temporalSignals)
 
         return RiskAssessment(
             level: level,
-            score: normalizedScore,
+            score: adjustedScore,
             activeSignals: signals,
-            timestamp: Date()
+            timestamp: Date(),
+            temporalSignals: temporalSignals,
+            usedPersonalizedThresholds: personalizedThresholds != nil
         )
     }
 
@@ -126,10 +169,11 @@ struct RiskScoringEngine {
         guard let rhr = restingHR else {
             return RiskSignal(name: "Resting Heart Rate", description: "No data available", weight: 0.25, isActive: false)
         }
-        let isElevated = rhr >= 100
+        let threshold = thresholds.restingHRAlert
+        let isElevated = rhr >= threshold
         return RiskSignal(
             name: "Resting Heart Rate",
-            description: isElevated ? "Elevated: \(Int(rhr)) bpm (threshold: 100)" : "\(Int(rhr)) bpm — normal",
+            description: isElevated ? "Elevated: \(Int(rhr)) bpm (threshold: \(Int(threshold)))" : "\(Int(rhr)) bpm — normal",
             weight: 0.25,
             isActive: isElevated
         )
@@ -139,10 +183,11 @@ struct RiskScoringEngine {
         guard let hr = hr else {
             return RiskSignal(name: "Heart Rate", description: "No data available", weight: 0.10, isActive: false)
         }
-        let isElevated = hr > 110
+        let threshold = thresholds.heartRateAlert
+        let isElevated = hr > threshold
         return RiskSignal(
             name: "Heart Rate",
-            description: isElevated ? "Elevated: \(Int(hr)) bpm (threshold: 110)" : "\(Int(hr)) bpm — normal range",
+            description: isElevated ? "Elevated: \(Int(hr)) bpm (threshold: \(Int(threshold)))" : "\(Int(hr)) bpm — normal range",
             weight: 0.10,
             isActive: isElevated
         )
@@ -153,10 +198,11 @@ struct RiskScoringEngine {
             return RiskSignal(name: "HRV", description: "No data available", weight: 0.20, isActive: false)
         }
         let dropPercent = ((baselines.averageHRV - hrv) / baselines.averageHRV) * 100
-        let isDepressed = dropPercent > 30
+        let threshold = thresholds.hrvDropPercentAlert
+        let isDepressed = dropPercent > threshold
         return RiskSignal(
             name: "HRV",
-            description: isDepressed ? "Dropped \(Int(dropPercent))% from baseline" : "Within normal range (\(Int(hrv)) ms)",
+            description: isDepressed ? "Dropped \(Int(dropPercent))% from baseline (threshold: \(Int(threshold))%)" : "Within normal range (\(Int(hrv)) ms)",
             weight: 0.20,
             isActive: isDepressed
         )
@@ -166,10 +212,11 @@ struct RiskScoringEngine {
         guard let temp = temp else {
             return RiskSignal(name: "Temperature", description: "No data available", weight: 0.12, isActive: false)
         }
-        let isElevated = temp > 1.0
+        let threshold = thresholds.temperatureAlert
+        let isElevated = temp > threshold
         return RiskSignal(
             name: "Temperature",
-            description: isElevated ? "Elevated: +\(String(format: "%.1f", temp))°C from baseline" : "Normal deviation",
+            description: isElevated ? "Elevated: +\(String(format: "%.1f", temp))°C from baseline (threshold: +\(String(format: "%.1f", threshold))°)" : "Normal deviation",
             weight: 0.12,
             isActive: isElevated
         )
@@ -179,12 +226,11 @@ struct RiskScoringEngine {
         guard let spo2 = spo2 else {
             return RiskSignal(name: "Blood Oxygen", description: "No data available", weight: 0.12, isActive: false)
         }
-        // Use daily average, not minimum — Apple Watch SpO2 minimum readings
-        // are too noisy (67% false positive rate vs 5% for average)
-        let isLow = spo2 < 92
+        let threshold = thresholds.spo2Alert
+        let isLow = spo2 < threshold
         return RiskSignal(
             name: "Blood Oxygen",
-            description: isLow ? "Low: \(Int(spo2))% (threshold: 92%)" : "\(Int(spo2))% — normal",
+            description: isLow ? "Low: \(Int(spo2))% (threshold: \(Int(threshold))%)" : "\(Int(spo2))% — normal",
             weight: 0.12,
             isActive: isLow
         )
@@ -195,10 +241,11 @@ struct RiskScoringEngine {
             return RiskSignal(name: "Activity", description: "No data available", weight: 0.06, isActive: false)
         }
         let dropPercent = Double(baselines.averageDailySteps - steps) / Double(baselines.averageDailySteps) * 100
-        let isReduced = dropPercent > 50
+        let threshold = thresholds.stepDropPercentAlert
+        let isReduced = dropPercent > threshold
         return RiskSignal(
             name: "Activity",
-            description: isReduced ? "Activity down \(Int(dropPercent))% from baseline" : "\(steps) steps — normal",
+            description: isReduced ? "Activity down \(Int(dropPercent))% from baseline (threshold: \(Int(threshold))%)" : "\(steps) steps — normal",
             weight: 0.06,
             isActive: isReduced
         )
@@ -260,11 +307,17 @@ struct RiskScoringEngine {
         )
     }
 
-    private func riskLevel(from score: Double, signals: [RiskSignal]) -> RiskLevel {
+    private func riskLevel(from score: Double, signals: [RiskSignal], temporalSignals: [TemporalSignal] = []) -> RiskLevel {
         let activeCount = signals.filter(\.isActive).count
+        let hasSustainedPattern = temporalSignals.contains { $0.daysDetected >= 2 && $0.severity >= 0.5 }
+        let hasConvergence = temporalSignals.contains { $0.name == "Multi-Signal Convergence" }
+
+        // Multi-day sustained patterns with convergence are the strongest predictor
+        if hasConvergence && hasSustainedPattern { return .red }
 
         if score >= 0.55 || activeCount >= 5 { return .red }
         if score >= 0.35 || activeCount >= 3 { return .orange }
+        if hasSustainedPattern { return .orange }
         if score >= 0.15 || activeCount >= 1 { return .yellow }
         return .green
     }

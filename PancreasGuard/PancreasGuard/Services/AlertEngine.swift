@@ -4,9 +4,10 @@ import SwiftData
 
 @Observable
 final class AlertEngine {
-    private let scoringEngine: RiskScoringEngine
+    private var scoringEngine: RiskScoringEngine
     private var lastNotificationLevel: RiskLevel = .green
     private var lastNotificationTime: Date?
+    let aiAnalyst = AIRiskAnalyst()
 
     var currentAssessment: RiskAssessment?
 
@@ -15,18 +16,36 @@ final class AlertEngine {
     }
 
     func updateBaselines(_ baselines: RiskScoringEngine.Baselines) {
-        var engine = scoringEngine
-        engine.baselines = baselines
+        scoringEngine.baselines = baselines
     }
 
-    func evaluate(snapshot: HealthSnapshot, symptoms: [SymptomEntry], food: [FoodEntry], appleHealthAlcoholDrinks: Double = 0, appleHealthDietaryFatGrams: Double = 0) -> RiskAssessment {
-        let assessment = scoringEngine.assess(snapshot: snapshot, recentSymptoms: symptoms, recentFood: food, appleHealthAlcoholDrinks: appleHealthAlcoholDrinks, appleHealthDietaryFatGrams: appleHealthDietaryFatGrams)
+    func updatePersonalizedThresholds(_ thresholds: PersonalizedThresholds) {
+        scoringEngine.personalizedThresholds = thresholds
+    }
+
+    func evaluate(snapshot: HealthSnapshot, symptoms: [SymptomEntry], food: [FoodEntry], appleHealthAlcoholDrinks: Double = 0, appleHealthDietaryFatGrams: Double = 0, recentHistory: [DailyBiometricSummary] = []) -> RiskAssessment {
+        let assessment = scoringEngine.assess(snapshot: snapshot, recentSymptoms: symptoms, recentFood: food, appleHealthAlcoholDrinks: appleHealthAlcoholDrinks, appleHealthDietaryFatGrams: appleHealthDietaryFatGrams, recentHistory: recentHistory)
         currentAssessment = assessment
 
         if shouldNotify(for: assessment) {
             sendNotification(for: assessment)
             lastNotificationLevel = assessment.level
             lastNotificationTime = Date()
+        }
+
+        // Run on-device AI analysis for elevated risk
+        if assessment.level >= .orange {
+            Task {
+                if #available(iOS 27.0, watchOS 27.0, *) {
+                    await aiAnalyst.analyzeRiskContext(
+                        assessment: assessment,
+                        temporalSignals: assessment.temporalSignals,
+                        recentHistory: recentHistory,
+                        recentSymptoms: symptoms,
+                        recentFood: food
+                    )
+                }
+            }
         }
 
         return assessment
@@ -59,14 +78,15 @@ final class AlertEngine {
 
     private func sendNotification(for assessment: RiskAssessment) {
         let content = UNMutableNotificationContent()
+        let hasTrends = !assessment.temporalSignals.isEmpty
 
         switch assessment.level {
         case .red:
-            content.title = "Urgent: Multiple Warning Signs"
+            content.title = hasTrends ? "Urgent: Multi-Day Warning Pattern" : "Urgent: Multiple Warning Signs"
             content.body = assessment.recommendation
             content.sound = .defaultCritical
         case .orange:
-            content.title = "Elevated Risk Detected"
+            content.title = hasTrends ? "Elevated Risk: Trending Pattern" : "Elevated Risk Detected"
             content.body = assessment.recommendation
             content.sound = .default
         case .yellow:
@@ -83,7 +103,12 @@ final class AlertEngine {
             .filter(\.isActive)
             .map(\.name)
             .joined(separator: ", ")
-        content.userInfo = ["signals": activeSignalNames, "level": assessment.level.rawValue]
+        let trendNames = assessment.temporalSignals.map(\.name).joined(separator: ", ")
+        content.userInfo = [
+            "signals": activeSignalNames,
+            "trends": trendNames,
+            "level": assessment.level.rawValue
+        ]
 
         let request = UNNotificationRequest(
             identifier: "risk-\(UUID().uuidString)",

@@ -136,6 +136,75 @@ final class HealthKitManager {
         recentDietaryFatGrams = fatGrams ?? 0
     }
 
+    // MARK: - Daily Biometric Summaries (for adaptive baselines + temporal patterns)
+
+    func buildDailySummary(for date: Date) async -> DailyBiometricSummary {
+        let startOfDay = Calendar.current.startOfDay(for: date)
+        let endOfDay = Calendar.current.date(byAdding: .day, value: 1, to: startOfDay)!
+        let dayOfWeek = Calendar.current.component(.weekday, from: date)
+
+        let summary = DailyBiometricSummary(date: startOfDay, dayOfWeek: dayOfWeek)
+
+        async let avgHR = fetchDayAverage(.heartRate, start: startOfDay, end: endOfDay)
+        async let rhr = fetchDayAverage(.restingHeartRate, start: startOfDay, end: endOfDay)
+        async let hrv = fetchDayAverage(.heartRateVariabilitySDNN, start: startOfDay, end: endOfDay)
+        async let spo2 = fetchDayAverage(.oxygenSaturation, start: startOfDay, end: endOfDay)
+        async let steps = fetchDaySteps(start: startOfDay, end: endOfDay)
+        async let temp = fetchDayAverage(.appleSleepingWristTemperature, start: startOfDay, end: endOfDay)
+
+        let (hr, r, h, s, st, t) = await (avgHR, rhr, hrv, spo2, steps, temp)
+        summary.avgHeartRate = hr
+        summary.restingHeartRate = r
+        summary.avgHRV = h
+        summary.avgSpO2 = s.map { $0 * 100 }
+        summary.stepCount = st
+        summary.wristTemperature = t
+
+        return summary
+    }
+
+    func fetchRecentSummaries(days: Int) async -> [DailyBiometricSummary] {
+        var summaries: [DailyBiometricSummary] = []
+        for dayOffset in 0..<days {
+            let date = Calendar.current.date(byAdding: .day, value: -dayOffset, to: Date())!
+            let summary = await buildDailySummary(for: date)
+            summaries.append(summary)
+        }
+        return summaries
+    }
+
+    private func fetchDayAverage(_ identifier: HKQuantityTypeIdentifier, start: Date, end: Date) async -> Double? {
+        let type = HKQuantityType.quantityType(forIdentifier: identifier)!
+        return await withCheckedContinuation { continuation in
+            let predicate = HKQuery.predicateForSamples(withStart: start, end: end, options: .strictStartDate)
+            let query = HKStatisticsQuery(
+                quantityType: type,
+                quantitySamplePredicate: predicate,
+                options: .discreteAverage
+            ) { _, statistics, _ in
+                let unit = HealthKitQueries.preferredUnit(for: type)
+                continuation.resume(returning: statistics?.averageQuantity()?.doubleValue(for: unit))
+            }
+            store.execute(query)
+        }
+    }
+
+    private func fetchDaySteps(start: Date, end: Date) async -> Int? {
+        let type = HKQuantityType.quantityType(forIdentifier: .stepCount)!
+        return await withCheckedContinuation { continuation in
+            let predicate = HKQuery.predicateForSamples(withStart: start, end: end, options: .strictStartDate)
+            let query = HKStatisticsQuery(
+                quantityType: type,
+                quantitySamplePredicate: predicate,
+                options: .cumulativeSum
+            ) { _, statistics, _ in
+                let value = statistics?.sumQuantity()?.doubleValue(for: .count())
+                continuation.resume(returning: value.map { Int($0) })
+            }
+            store.execute(query)
+        }
+    }
+
     // MARK: - Private
 
     private func fetchLatest(_ identifier: HKQuantityTypeIdentifier) async -> Double? {
