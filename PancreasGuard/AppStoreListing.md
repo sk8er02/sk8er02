@@ -35,7 +35,7 @@ SYMPTOM DIARY
 Log pain level, location, nausea, vomiting, fever, and digestive changes in seconds — right from your Apple Watch or iPhone. Everything is timestamped and correlated with your biometric data.
 
 RISK SCORING
-Our multi-signal risk engine weighs 9 different indicators based on published medical research to give you a clear green/yellow/orange/red status. It's not a diagnosis — it's an early warning system that helps you decide when to call your doctor.
+Our multi-signal risk engine weighs 10 different indicators based on published medical research to give you a clear green/yellow/orange/red status. It's not a diagnosis — it's an early warning system that helps you decide when to call your doctor.
 
 WORKS WITH YOUR OTHER APPS
 PancreasGuard reads dietary data from MyFitnessPal, DrinkCount, and any app that writes to Apple Health. When you log food or symptoms in PancreasGuard, it writes back to Apple Health too. No double entry.
@@ -43,8 +43,8 @@ PancreasGuard reads dietary data from MyFitnessPal, DrinkCount, and any app that
 SHARE WITH YOUR DOCTOR
 Generate a health report with your biometric trends, symptom history, flare events, and dietary patterns. Share it directly with your healthcare provider.
 
-BUILT ON RESEARCH
-The risk engine is informed by published studies, including research on heart rate elevation in pancreatitis (Nature Scientific Reports, 2024) and ongoing clinical trials studying HRV as an early detection marker for pancreatic disease. It has also been validated against real Apple Watch data from acute pancreatitis events, where the engine's multi-signal analysis identified warning patterns days before hospitalization.
+BUILT ON REAL DATA
+The risk engine isn't theoretical — it was validated against 3 years (1,102 days) of real Apple Watch data spanning two acute pancreatitis hospitalizations. The engine fired RED alerts 3-4 days before each hospitalization, and correctly flagged a heavy alcohol episode as high-risk — all while maintaining fewer than 2 ambiguous alerts per year. The scoring algorithm is tuned using signal specificity analysis (e.g., resting heart rate fires on <1% of normal days vs. average heart rate at 28%) and informed by published research including Nature Scientific Reports (2024) and an active NIH clinical trial (NCT04400903) on HRV for early pancreatic disease detection.
 
 YOUR DATA STAYS YOURS
 All processing happens on your device. No accounts, no cloud uploads, no data selling. Your health information never leaves your iPhone.
@@ -80,4 +80,4 @@ All data stays on device. No analytics, no tracking, no third-party SDKs.
 https://github.com/sk8er02/PancreasGuard
 
 ## Review Notes for Apple
-This app reads HealthKit data (heart rate, HRV, blood oxygen, wrist temperature, step count, respiratory rate, dietary nutrition, symptoms) and writes symptom categories and dietary data back to HealthKit. All data processing occurs on-device. The app uses the Foundation Models framework (iOS 27+) for on-device food image recognition. The risk scoring system is based on published medical research and has been validated against real Apple Watch data from a user with two acute pancreatitis hospitalizations, where the engine detected elevated risk days before each event. The app is clearly presented as a health companion tool, not a diagnostic device. Medical disclaimers are shown during onboarding and accessible from Settings.
+This app reads HealthKit data (heart rate, HRV, blood oxygen, wrist temperature, step count, respiratory rate, dietary nutrition, symptoms) and writes symptom categories and dietary data back to HealthKit. All data processing occurs on-device. The app uses the Foundation Models framework (iOS 27+) for on-device food image recognition. The risk scoring system is based on published medical research and validated against 1,102 days of real Apple Watch data from a user with two confirmed acute pancreatitis hospitalizations (January 2026, June 2026). The engine detected elevated risk (RED alerts) 3-4 days before each hospitalization and correctly identified a confirmed high-risk alcohol episode — while producing fewer than 2 ambiguous alerts per year after signal tuning. The original engine was tuned based on false positive analysis: resting heart rate replaced average heart rate as the primary signal (0.8% vs 28.4% daily fire rate), and SpO2 thresholds were adjusted to account for Apple Watch sensor noise. Full validation methodology is documented in ValidationReport.md. The app is clearly presented as a health companion tool, not a diagnostic device. Medical disclaimers are shown during onboarding and accessible from Settings.

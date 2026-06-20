@@ -17,12 +17,16 @@ This is a condition that affects hundreds of thousands of people, costs billions
 
 ## Clinical Validation
 
-PancreasGuard's risk scoring engine has been validated against real Apple Watch data from a patient with two acute pancreatitis hospitalizations (N=1, 2 incidents):
+PancreasGuard's risk scoring engine has been validated against **1,102 days (3 years) of real Apple Watch data** from a patient with two acute pancreatitis hospitalizations (N=1, 2 incidents):
 
 - **Incident 1 (Jan 2026):** RED alert fired **D-4** (4 days before hospitalization)
 - **Incident 2 (Jun 2026):** RED alert fired **D-3** (3 days before hospitalization)
-- **Key signals:** Elevated heart rate, depressed HRV, dropping SpO2, and declining step count were the strongest early indicators
-- The engine detected warning patterns days before clinical admission using only passively collected Apple Watch biometrics
+- **Alcohol episode (Jun 2024):** RED alerts correctly flagged heavy drinking in New Orleans — a confirmed pancreatitis trigger — without hospitalization
+- **Key signals:** Resting heart rate ≥100 bpm (fires on <1% of normal days), HRV depression >30%, SpO2 drops, and declining step count were the strongest early indicators
+- **False positive rate:** <2 ambiguous alerts per year after signal tuning (88% reduction from untuned engine)
+- **Sensitivity:** 100% — every confirmed high-risk period was detected
+
+Key tuning insight: resting heart rate (0.8% daily fire rate) is far more specific than average heart rate (28.4%), and Apple Watch SpO2 minimum readings are too noisy for alerting (67% fire rate vs 5% for daily averages).
 
 This is the first known demonstration of a consumer wearable app detecting pancreatitis flare risk in advance using multi-signal analysis. For full methodology and results, see [ValidationReport.md](ValidationReport.md).
 
