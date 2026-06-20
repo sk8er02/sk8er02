@@ -98,7 +98,7 @@ Based on successful health app models (Bearable, Cara Care, Chronic Insights):
 ### Alternative Revenue Streams (Phase 2+)
 
 - **Lifetime purchase option**: $79.99 one-time (appeals to chronic condition patients who know they'll use it long-term)
-- **Research partnerships**: Opt-in anonymous data contribution to pancreatic disease research institutions
+- **Research partnerships**: Opt-in anonymized data contribution to pancreatic disease research institutions (see Community Data Program below)
 - **Healthcare provider partnerships**: Clinic-licensed version with patient dashboards
 - **Affiliate**: Pancreatic enzyme supplement recommendations (PERT) — must be done carefully to maintain trust
 
@@ -125,10 +125,40 @@ Based on successful health app models (Bearable, Cara Care, Chronic Insights):
 - Content marketing: blog posts about pancreatitis self-management
 
 ### Phase 3: Expand (Months 6-12)
+- **Community Data Program** (see below) — opt-in anonymized data sharing to improve the risk engine
 - Research partnership with an institution studying pancreatitis (like the NCT04400903 trial team)
-- CoreML personalized flare prediction model
+- CoreML personalized flare prediction model trained on community data
 - Android/Wear OS version consideration
 - Localization (Spanish, French, German as priority markets)
+
+---
+
+## Community Data Program (Phase 3)
+
+### The Problem
+The current risk engine is validated on N=1 — one patient, two hospitalizations, 3 years of data. The results are promising (100% sensitivity, <2 false alerts/year), but a sample size of one cannot generalize. Different patients have different baselines, different triggers, and different pre-flare patterns.
+
+### The Solution
+An opt-in, anonymized data sharing program that lets users contribute their biometric patterns and flare outcomes to improve detection for the entire pancreatitis community.
+
+### How It Works
+1. **Fully opt-in**: Users explicitly choose to participate; the app works identically without it
+2. **Anonymized at the source**: Data is stripped of all identifying information on-device before upload — no names, no locations, no Apple Health IDs. Only biometric patterns (HR, HRV, SpO2, temperature, step trends), symptom logs, and flare outcomes
+3. **Apple ResearchKit integration**: Built on Apple's established framework for ethical health research, which provides informed consent flows, data handling standards, and IRB-ready study design
+4. **Transparent data use**: Users can see exactly what data is shared, withdraw at any time, and request deletion
+
+### What This Enables
+- **Larger validation**: Move from N=1 to N=hundreds, establishing statistical significance for each risk signal
+- **Subgroup analysis**: Do chronic pancreatitis patients show different pre-flare patterns than recurrent acute? Do alcohol-related cases differ from gallstone-related?
+- **Personalized thresholds**: Train a CoreML model that adapts signal weights to individual patient physiology rather than using fixed thresholds
+- **New signal discovery**: With enough data, identify subtle patterns that aren't visible in a single patient's data
+- **Research publications**: Partner with GI research institutions to publish findings — giving the pancreatitis community evidence-based tools
+
+### Privacy Architecture
+- All processing on-device; anonymized summaries uploaded (not raw HealthKit data)
+- No third-party analytics or advertising SDKs
+- Data stored in compliance with HIPAA de-identification standards (Safe Harbor method)
+- Research use only — never sold, never used for advertising
 
 ---
 

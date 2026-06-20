@@ -43,8 +43,12 @@ PancreasGuard reads dietary data from MyFitnessPal, DrinkCount, and any app that
 SHARE WITH YOUR DOCTOR
 Generate a health report with your biometric trends, symptom history, flare events, and dietary patterns. Share it directly with your healthcare provider.
 
-BUILT ON REAL DATA
-The risk engine isn't theoretical — it was validated against 3 years (1,102 days) of real Apple Watch data spanning two acute pancreatitis hospitalizations. The engine fired RED alerts 3-4 days before each hospitalization, and correctly flagged a heavy alcohol episode as high-risk — all while maintaining fewer than 2 ambiguous alerts per year. The scoring algorithm is tuned using signal specificity analysis (e.g., resting heart rate fires on <1% of normal days vs. average heart rate at 28%) and informed by published research including Nature Scientific Reports (2024) and an active NIH clinical trial (NCT04400903) on HRV for early pancreatic disease detection.
+RESEARCH-BACKED. REAL-WORLD TESTED.
+The risk engine is grounded in peer-reviewed research — including a study on heart rate elevation in pancreatitis (Nature Scientific Reports, 2024) and an active NIH clinical trial on HRV for early pancreatic disease detection (NCT04400903).
+
+For this initial release, the engine was validated against 3 years (1,102 days) of real Apple Watch data from a single patient with two acute pancreatitis hospitalizations. It's an N=1 case study — not a clinical trial — but the results are promising: RED alerts fired 3-4 days before each hospitalization, a confirmed heavy alcohol episode was correctly flagged as high-risk, and the tuned engine produces fewer than 2 ambiguous alerts per year.
+
+We're transparent about the limitations. This is a starting point. A future version will offer opt-in anonymized data sharing so the risk engine can learn from the broader pancreatitis community and improve detection for everyone.
 
 YOUR DATA STAYS YOURS
 All processing happens on your device. No accounts, no cloud uploads, no data selling. Your health information never leaves your iPhone.
